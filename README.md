@@ -14,7 +14,7 @@ git clone --recursive https://github.com/cvamateur/GNetDet-Pytorch.git
 
 ### Data preparation
 
-See **DSCollection** documentation for dataset  generation, extraction or other data manipulations, which could save your time when you organize any dataset into Pascal VOC dataset format which will then be used to extract data **meta data** for GNetDet to use.
+See **DSCollection** documentation for dataset  generation, extraction or other data manipulations, which could save your time when you organize any dataset into Pascal VOC dataset format which will then be used to extract **meta data** for GNetDet to use.
 
 
 
