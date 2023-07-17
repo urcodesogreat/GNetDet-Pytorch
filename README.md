@@ -39,7 +39,7 @@ python tools/xml_2_txt.py
 
 ### GNetDet Training Procedure 
 
-GNetDet is a simple one stage object detection network, like YOLO, with slightly changes on the architecture where only a few 3x3 convolution layers, ReLU and max-pooling layers are used. The network topology itself could be seen as a VGG16 variant which is a linear network that could be loaded, after fully quantized, onto the chip **GTI 5801** and perform real time object detection inference with support of at most 256 difference classes.
+GNetDet is a simple one stage object detection network, like YOLO, with slightly changes on the architecture where only a few 3x3 convolution layers, ReLU and max-pooling layers are used. The network topology itself could be seen as a VGG16 variant which is a linear network that could be loaded, after fully quantized, onto the chip **GTI 5801** and perform real time object detection with at most 256 difference classes.
 
 To train GNetDet, one must strictly follow the following four steps training procedure before converting to a real chip model.
 
