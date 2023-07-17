@@ -44,7 +44,7 @@ GNetDet is a simple one stage object detection network, like YOLO, with slightly
 To train GNetDet, one must strictly follow the following four steps training procedure before converting to a real chip model.
 
 > Note:
->  One can use Tensorboard to supervise all steps of training for more in-depth information include `loss-epoch`, `mAP-epoch`, `lr-epoch`, or distribution of parameters, activations as well as gradient flow.
+>  One can use Tensorboard to supervise all steps of training for more in-depth information include `loss-epoch`, `mAP-epoch`, `lr-epoch`, or distribution of parameters, activations as well as gradient flow. <br>
 >  `tensorboard --logdir log`
 
 
@@ -52,7 +52,7 @@ To train GNetDet, one must strictly follow the following four steps training pro
 
 **Step 1: Training a FP32 model**
 
-A decent FP32 model is training on this step. You can modify any hyperparameters on training-phase as described in `config.py`. There are many of them which you may frequently changed across different datasets:
+A decent FP32 model is training on this step. You can modify any hyperparameters on training-phase as described in `config.py`. There are many of them which you may frequently changed across different training stages, and also different datasets you are training on:
 
 - learning_rate
 - batch_size
