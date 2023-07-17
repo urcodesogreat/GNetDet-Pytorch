@@ -128,7 +128,7 @@ gamma 0.1 \
 warmup-epochs 200
 ```
 
-Also, the performance degradation may not be too much, 1~10% degradation is always acceptable.
+Also, the performance degradation may not be too much, 1~10% is always acceptable.
 
 
 
