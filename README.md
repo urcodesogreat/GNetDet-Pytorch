@@ -2,9 +2,19 @@
 
 
 
-**Data preparation:**
+### Clone the project
 
-See **DSCollection** documentation for dataset  generation, extraction or other data manipulations, which could save your time when you organize any dataset into Pascal VOC dataset format.
+```shell
+git clone --recursive https://github.com/cvamateur/GNetDet-Pytorch.git 
+```
+
+---
+
+
+
+### Data preparation
+
+See **DSCollection** documentation for dataset  generation, extraction or other data manipulations, which could save your time when you organize any dataset into Pascal VOC dataset format which will thenbe used to extract data **meta data** for GNetDet to use.
 
 
 
@@ -22,6 +32,16 @@ Then run the following script to generate meta data:
 ```python
 python tools/xml_2_txt.py
 ```
+
+---
+
+
+
+### GNetDet Training Procedure 
+
+GNetDet is a simple one stage object detection network, like YOLO, with slightly changes on the architecture where only a few 3x3 convolution layers, ReLU and max-pooling layers are used. The network topology itself could be seen as a VGG16 variant which is a linear network that could be totally loaded onto the chip **GIT 5801** and perform real time object detection inference with at most 256 difference classes.
+
+To train GNetDet, one must strictly follow the following four steps training procedure before converting to a chip model.
 
 
 
@@ -57,7 +77,7 @@ warmup-epochs 100
 
 
 
-**Step 2: Quantize Conv Layers**
+**Step 2.1: Quantize Conv Layers**
 
 Next you will need to quantize all conv layers. Refer GNetDet specifications and documentation for more details about quantization in this step and how to avoid some common pitfalls started from this step.
 
@@ -76,7 +96,7 @@ warmup-epochs 200
 
 
 
-**Step 3: Calibration activations**
+**Step2.2: Calibration activations**
 
 After step 2 training, you got a model with quantized conv layers, which may not perform as good as the phase 1 FP32 model does, but hopes does not differ to much. Before you quantize activations, you need to calibrate them, run the following script.
 
@@ -86,7 +106,7 @@ python train-dist.py --step 2 --cal checkpoint-path checkpoint/step2/best.pth
 
 
 
-**Step 4: Quantize Activations**
+**Step 3: Quantize Activations**
 
 Another separate step to quantize activation values, as well as conv layers:
 
@@ -107,7 +127,7 @@ Also, the performance degradation may not be too much, 1~10% degradation is alwa
 
 
 
-**Step 5: Quantize to Chip**
+**Step 4: Quantize to Chip**
 
  The final training step is turn on quant-31, which is required by 5801 chip. 
 
@@ -147,3 +167,27 @@ python GNetDet.py image -m out.model -i test/imgs -o test/output
 ```
 
 This script will load the model onto the chip and save the inference images into output directory.
+
+---
+
+
+
+### Leverage Multi-GPU (with distributed) training
+
+Now the GNetDet training toolkit supports multi-gpu as well as distributed training using multiple PC. One can easily leverages multi-gpu by including `--gpus N`  or `--world-size N --rank I --dist-url <IP>:<PORT> ` in training scripts:
+
+```shell
+# Use two GPUs
+python train-dist.py --gpus 2 --step 1 
+
+# Use two GPUs per each node
+[node1] python train-dist.py --gpus 2 --world-size 2 --rank 0 --dist-url 192.168.3.216:8888
+[node2] python train-dist.py --gpus 2 --world-size 2 --rank 1 --dist-url 192.168.3.216:8888
+```
+
+If you are familiar with Detectron2, now you may feel at home, since the distributive training methodology is almost the same. See more details with helper:
+
+```shell
+python train-dist.py -h
+```
+
