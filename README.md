@@ -179,7 +179,7 @@ This script will load the model onto the chip and save the inference images into
 
 ### Leverage Multi-GPU (with distributed) training
 
-Now the GNetDet training toolkit supports multi-gpu as well as distributed training using multiple PC. One can easily leverages multi-gpu by including `--gpus N`  or `--world-size N --rank I --dist-url <IP>:<PORT> ` in training scripts:
+Now the GNetDet training toolkit supports multi-gpu as well as distributed training. One can easily leverages multi-gpu by including `--gpus N`  or `--world-size N --rank I --dist-url <IP>:<PORT> ` in training scripts:
 
 ```shell
 # Use two GPUs
