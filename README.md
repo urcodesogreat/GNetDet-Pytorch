@@ -14,7 +14,7 @@ git clone --recursive https://github.com/cvamateur/GNetDet-Pytorch.git
 
 ### Data preparation
 
-See **DSCollection** documentation for dataset  generation, extraction or other data manipulations, which could save your time when you organize any dataset into Pascal VOC dataset format which will thenbe used to extract data **meta data** for GNetDet to use.
+See **DSCollection** documentation for dataset  generation, extraction or other data manipulations, which could save your time when you organize any dataset into Pascal VOC dataset format which will then be used to extract data **meta data** for GNetDet to use.
 
 
 
@@ -39,15 +39,15 @@ python tools/xml_2_txt.py
 
 ### GNetDet Training Procedure 
 
-GNetDet is a simple one stage object detection network, like YOLO, with slightly changes on the architecture where only a few 3x3 convolution layers, ReLU and max-pooling layers are used. The network topology itself could be seen as a VGG16 variant which is a linear network that could be totally loaded onto the chip **GIT 5801** and perform real time object detection inference with at most 256 difference classes.
+GNetDet is a simple one stage object detection network, like YOLO, with slightly changes on the architecture where only a few 3x3 convolution layers, ReLU and max-pooling layers are used. The network topology itself could be seen as a VGG16 variant which is a linear network that could be loaded, after fully quantized, onto the chip **GIT 5801** and perform real time object detection inference with support of at most 256 difference classes.
 
-To train GNetDet, one must strictly follow the following four steps training procedure before converting to a chip model.
+To train GNetDet, one must strictly follow the following four steps training procedure before converting to a real chip model.
 
 
 
 **Step 1: Training a FP32 model**
 
-A decent FP32 model is training on this step. You can modify any hyperparameters on training-phase as described in `config.py`. There are many of them which you may frequently changed across different difference datasets:
+A decent FP32 model is training on this step. You can modify any hyperparameters on training-phase as described in `config.py`. There are many of them which you may frequently changed across different datasets:
 
 - learning_rate
 - batch_size
@@ -60,7 +60,7 @@ A decent FP32 model is training on this step. You can modify any hyperparameters
 
 Refer to `config.py` and `gnetmdk/config/config.py` for more details.
 
-Use the following script to start phase 1 training, you can specify any hyperparameters using CLI arguments as well to override those with same name in `config.py` (would be helpfull when you are training on a remote server).
+Use the following script to start phase 1 training, you can specify any hyperparameters using CLI arguments as well to override those of the same name in `config.py` (would be helpfull when you are training on a remote server).
 
 ```python
 python train-dist.py --step 1 [specify any hyperparameters to override config.py]
