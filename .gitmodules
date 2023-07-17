@@ -1,0 +1,3 @@
+[submodule "DSCollection"]
+	path = DSCollection
+	url = https://github.com/cvamateur/DSCollection.git
