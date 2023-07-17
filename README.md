@@ -60,7 +60,7 @@ A decent FP32 model is training on this step. You can modify any hyperparameters
 
 Refer to `config.py` and `gnetmdk/config/config.py` for more details.
 
-Use the following script to start phase 1 training, you can specify any hyperparameters using CLI arguments as well to override those of the same name in `config.py` (would be helpfull when you are training on a remote server).
+Use the following script to start phase 1 training, you can specify any hyperparameters using CLI arguments to override those of the same name in `config.py` (would be helpfull when you are training on a remote server).
 
 ```python
 python train-dist.py --step 1 [specify any hyperparameters to override config.py]
