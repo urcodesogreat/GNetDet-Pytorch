@@ -103,7 +103,7 @@ warmup-epochs 200
 
 **Step2.2: Calibration activations**
 
-After step 2 training, you got a model with quantized conv layers, which may not perform as good as the phase 1 FP32 model does, but hopes does not differ to much. Before you quantize activations, you need to calibrate them, run the following script.
+After step 2 training, you got a model with quantized conv layers, which may not perform as good as the phase-1 FP32 model, but hopes not differ to much. Before you quantize activations, you need to calibrate them, run the following script.
 
 ```python
 python train-dist.py --step 2 --cal checkpoint-path checkpoint/step2/best.pth
