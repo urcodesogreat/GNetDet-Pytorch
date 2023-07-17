@@ -1,0 +1,207 @@
+------------------------------------------------------------------------------------
+2021_09_09 更新说明：
+
+    1. Warmup LR Scheduler for
+        StepLR、MultiStepLR、CosineAnnealingLR、CosineAnnealingWarmRestarts
+
+------------------------------------------------------------------------------------
+2021_09_02 更新说明：
+
+    1. 代码重构： MDK代码重构，结构有很大变化
+    2. 此版本解决了上一个版本分布式训练代码的某些BUG
+    3. 分布式训练方法和上一个版本的相同，但现在支持更友好的命令行参数设定，请参照示例
+    4. 注意（重要）
+        从这个版本开始，对训练的 step 有了新的定义。
+
+        老版本：
+            从单精度模型到芯片模型共包括 `五` 个步骤：
+            step1   - 单精度浮点模型
+            step2.1 - conv层量化
+            step2.2 - 激活值校准
+            step3   - conv + 激活值 量化
+            step4   - 模型融合
+
+        新版本：
+            步骤总数不变，但取名变了：
+            step1   - 同上
+            step2   - 等同step2.1
+            cal     - 等同step2.2
+            step3   - 同上
+            step4   - 同上
+
+            这么做的好处如下：
+                - 明确了 calibration 步骤, 用户明确知道 cal 这一步就是校准；
+                - 能够与老版本代码中checkpoint目录结构保持一直，从而不会对之前的用户造成困扰；
+                - 从代码层面更容易管理：
+                    - step 变量仅仅只是4个整数而已；
+                    - cal 的设置实际上不依赖 step，设置 cal=True时， step会自动设置为 2，
+                      从而实现更友好的命令行参数设置。这一点之后通过示例展示。
+
+============
+1. 代码重构
+============
+此版本开始， MDK 将启用新的代码结构，目录结果如下：
+.
+├── checkpoint          # 模型检查点目录
+│   ├── step0           # 预训练模型，如voc20类GNetDet模型
+│   ├── step1           # 按照当前step储存最佳模型best.pth和最后epoch模型last.pth
+│   ├── step2
+│   ├── step3
+│   └── step4
+├── data                # 训练和验证数据集所在目录
+│    ├── meta           # xml_2_txt.py 解析后的训练数据txt文件
+│    └── <DS_NAME>      # 数据集名称，必须与 configs.py 中 DS_NAME 属性对应
+├── docs                # 说明文档
+├── gnetmdk             # **核心模块代码目录**
+│    ├── checkpoint     # 模型加载和保存相关
+│    ├── config         # 配置相关
+│    ├── dataset        # 数据相关
+│    ├── dist           # 分布式相关
+│    ├── evaluation     # 模型评估相关
+│    ├── gti            # GTI核心库目录
+│    │   ├── chip
+│    │   ├── config
+│    │   └── json
+│    └── layers         # GNetDet 模型结构相关
+├── log                 # Tensorboard 日志
+├── model               # 储存转化后的模型
+├── tools               # 工具脚本目录： 包含模型评估、芯片模型转化、推理演示、数据解析等工具脚本
+├── train.py            # 单机单卡 训练脚本， 同时支持GPU和CPU
+└── train-dist.py       # 单机单卡、单机多卡、多机多卡 训练脚本、只支持GPU
+
+
+===============
+2. 分布式训练示例
+===============
+此版本的分布式训练方式沿用了上一个版本的方法，但有一些改进，不过大体相同，很容易上手。
+
+
+示例1： 查看 train-dist.py 完整使用文档
+    python3 train-dist.py --help
+
+    参数说明：
+        --gpus          当前使用的GPU数量，默认为1，表示使用1块GPU
+        --world-size    多机训练时必须指定！ 单机训练时不需要指定！ 表示训练使用的 `机器总数`
+        --rank          多机训练时必须指定！ 单机训练时不需要指定！ 表示当前机器的 `序号`，从0开始计数
+        --step          [可选项] 如果指定，会覆盖configs.py文件中的step属性；如果不指定，以 configs.py 中的
+                        DEFAULT_STEP 的数值为准
+        --cal           不指定为False; 如果指定则为True，表示执行 calibration， 此时会忽略--step 以及 configs.py 文件中的 step，
+                        程序会自动设定 step=2，同时自动设定 num_epochs=1，表示只执行 1个 epoch
+        [其他参数]       可以覆盖 configs.py 中的同名属性，方便命令行执行时的配置参数设定，之后示例说明
+
+
+示例2： 单机单卡训练
+    首先，确保已经正确解析训练数据txt文件（由 tools/xml_2_txt.py 脚本生成）
+    然后在命令行运行：
+        2.1 所有配置参数由configs.py确定：
+            python3 train-dist.py
+
+        2.2 所有配置参数由configs.py确定, 但执行 calibration 步骤 （此时无需设置step，程序会忽略它）：
+            python3 train-dist.py  --cal
+
+        2.3 所有配置参数由configs.py确定, 但不想修改去文件中修改step数值，希望通过命令行直接指定某个step：
+            python3 train-dist.py --step 3
+
+            说明：
+                1. 配置参数的优先级由高到低为： 命令行 > configs.py 中的 Config > gnetmdk.config 中的 BaseConfig
+                2. 建议从 命令行 或 configs.py 的 Config 中修改配置; 除非看懂源码外，千万不要动 BaseConfig！
+                   参考2.4覆盖属性。
+
+        2.4 想要覆盖configs.py中的某些属性，但又不想手动修改configs.py中的数值：
+           （这种情况经常发生在多机分布式训练的场景，因为每台机子上都要去修改configs.py配置确实很麻烦）
+            python3 train-dist.py --step 3 batch-size 32 learning-rate=3e-5 num_workers 2 [有多少加多少，只要有这个配置名]
+
+            说明：
+                1. 命令行中指定的配置参数的名字必须在 Config 或 BaseConfig 中已经存在；
+                2. 带有 '-'(减号) 的名字自动替换为 '_'(下划线), 从而与 BaseConfig 中的属性名字保持一致，
+                   如 batch-size 最终会解析成 batch_size；
+                3. 也可以使用 '='(等号) 赋值, 如 learning-rate=3e-5 等价于 learning-rate 3e-5。
+
+示例3： 单机多卡训练
+    首先，确保已经正确解析训练数据txt文件（由 tools/xml_2_txt.py 脚本生成）
+    然后在命令行指定 --gpus 参数：
+
+    3.1 使用2块显卡， 所有配置参数由configs.py确定：
+        python3 train-dist.py --gpus 2
+
+    3.2 使用2块显卡，将batch-size提升2倍，因为程序会自动调整每块显卡分配到的batch-size：
+        python3 train-dist.py --gpus 2 batch-size 32
+
+        说明：
+            1. configs.py 文件中 batch_size=16, 由于命令行指定了batch-size=32，这将会替换原来的数值；
+            2. 由于采用了2块显卡，因此程序会自动调整batch-size, 最终每块显卡分配到 batch-size = 32 / 2 = 16
+            3. 多卡训练时务必注意batch-size的自动调整方案！！
+
+示例4： 多机单卡训练
+    首先，确保 **每台机子上** 已经正确解析训练数据txt文件（由 tools/xml_2_txt.py 脚本生成）
+    然后在每台机子上执行对应的命令：
+
+    4.1 确保每台机子上的 configs.py 配置完全一致，然后分别在对应的机子上运行对应的命令：
+        (机器0) python3 train-dist.py --world-size=2 --rank=0 --dist-url=192.168.3.100:8888
+        (机器1) python3 train-dist.py --world-size=2 --rank=1 --dist-url=192.168.3.100:8888
+
+        说明：
+            1. 机器0 是主机，其余的机器都是从机，从机必须能够通过网络访问主机的IP：端口；
+            2. 192.168.3.100:8888 表示 `机器0` 的IP和端口；
+            3. world-size=2 表示启用了2台机器；
+            4. rank的表示机器编号，必须从0开始；
+            5. 由于没有指定--gpus， 因此采用默认值=1，表示每台机子只使用1块显卡；
+            6. 如果要覆盖配置参数，方法参照示例2.4、示例3.2；
+            7. 只要 GPU 总数大于 1， batch-size 就会自动调整，本例中分配到每台机子上的batch-size会除2
+
+    4.1 覆盖configs.py中的step, 指定step=3的训练：
+        (机器0) python3 train-dist.py --step 3 --world-size=2 --rank=0 --dist-url=192.168.3.100:8888
+        (机器1) python3 train-dist.py --step 3 --world-size=2 --rank=1 --dist-url=192.168.3.100:8888
+
+    4.2 执行 calibration 步骤
+        (机器0) python3 train-dist.py --cal --world-size=2 --rank=0 --dist-url=192.168.3.100:8888
+        (机器1) python3 train-dist.py --cal --world-size=2 --rank=1 --dist-url=192.168.3.100:8888
+
+    4.3 覆盖其他属性
+        (机器0) python3 train-dist.py --cal --world-size=2 --rank=0 --dist-url=192.168.3.100:8888 batch-size 32
+        (机器1) python3 train-dist.py --cal --world-size=2 --rank=1 --dist-url=192.168.3.100:8888 batch-size 32
+
+        说明：
+            1. 必须确保在每台机器上执行的命令除了rank外 都相同！！！
+            2. 以 “--“ 开头的命令行参数，输入顺序可以随意变，但要覆盖 configs.py 中配置的命令行参数，必须放在 "--"开头参数的后面。
+
+
+示例5：  多机多卡训练
+    与示例4几乎一致， 只需要指定 --gpus 的数值即可:
+
+    (机器0) python3 train-dist.py --gpus 2 --world-size=2 --rank=0 --dist-url=192.168.3.100:8888
+    (机器1) python3 train-dist.py --gpus 2 --world-size=2 --rank=1 --dist-url=192.168.3.100:8888
+
+
+===========
+3. 其他说明
+===========
+
+3.1 数据并行化 以及 batch-size 自动调整方案：
+    GNetDet 分布式训练代码是一种数据并行方案， 每块显卡占用一个独立的进程， 每个进程维护一个独立的模型、优化器、等等。
+    训练数据会根据进程数进行合理的切分，保证每个进程中的数据量是相同的。
+    反向传播时，梯度会在所有节点上进行平均， 最终每个进程上的模型获得相同的梯度，从而保持所有进程中模型的一致性。
+
+    batch-size 会根据所有显卡的总数（进程数）进行平均，假设configs.py中 batch-size=16, 现有2台机器，每台机器上2块显卡，
+    那么最终每块显卡上batch-size等于 16/(2*2) = 4
+
+    之所以这么做，是为了将多卡训练的结果与单卡训练的结果保持一致，上述案例中相当于在一个单卡上直接采用batch-size=16*4=64进行训练
+    显然采用分布式训练对显卡的要求更低，但又能获得更大batch-size的相同的结果
+
+3.2 常见报错问题分析
+    3.2.1 Address already in use：
+        端口被占用， 释放端口即可
+        查看占用端口进程PID：
+            nvidia-smi  或  lsof -i:8888
+        杀死进程：
+            sudo kill -9 <PID>
+
+    3.2.2 "unable to open shared memory object </torch_5962_408180057> in read-write mode"：
+        共享内存不足(或其他不明原因)，经常在分布式训练时num-workers设置较大造成
+        降低num_workers,  如 num_workers=0
+        或者在命令行执行 (推荐)：
+            ulimit -n 64000
+
+    3.2.3 多机分布式训练时，显示 “WORLD_SIZE: 2;  RANK: 1” 这一句后就一直阻塞，程序卡住，不往下运行：
+        网络问题，进程间通讯受阻，比如开了全局VPN
+        关掉VPN

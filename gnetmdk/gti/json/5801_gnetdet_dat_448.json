@@ -1,0 +1,79 @@
+{
+    "layer": [
+        {
+            "coef_bits": 3,
+            "image_size": 448,
+            "input_channels": 3,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 64,
+            "pooling": true,
+            "sublayer_number": 1
+        },
+        {
+            "coef_bits": 3,
+            "image_size": 224,
+            "input_channels": 64,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 64,
+            "pooling": true,
+            "sublayer_number": 1
+        },
+        {
+            "coef_bits": 3,
+            "image_size": 112,
+            "input_channels": 64,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 128,
+            "pooling": true,
+            "sublayer_number": 2
+        },
+        {
+            "coef_bits": 3,
+            "image_size": 56,
+            "input_channels": 128,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 256,
+            "pooling": true,
+            "sublayer_number": 3
+        },
+        {
+            "coef_bits": 3,
+            "image_size": 28,
+            "input_channels": 256,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 256,
+            "pooling": true,
+            "sublayer_number": 3
+        },
+        {
+            "coef_bits": 3,
+            "image_size": 14,
+            "input_channels": 256,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 256,
+            "pooling": false,
+            "sublayer_number": 3
+        },
+        {
+            "coef_bits": 8,
+            "image_size": 14,
+            "input_channels": 256,
+            "last_layer_out": false,
+            "learning": false,
+            "output_channels": 256,
+            "pooling": false,
+            "sublayer_number": 3
+        }
+    ],
+    "model": [
+        {
+            "ChipType": 5801
+        }
+    ]
+}

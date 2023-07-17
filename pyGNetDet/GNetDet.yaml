@@ -1,0 +1,23 @@
+VERSION: 1
+
+CHIP: "SIT501"              # 5801 or SIT501
+
+MODEL:
+  NAME: "GNetDet"
+
+  INPUT:
+    SIZE: 448               # 448 or 224
+    FORMAT: 0               # 0: BGR, 1: Y
+
+  OUTPUT:
+    CAP: 1.016726           # last cap value
+
+OPTS:
+  CONF_THRESH: 0.5         # TC
+  PROB_THRESH: 0.5         # TP
+  NMS_THRESH: 0.3           # Usually keep default as 0.5
+  CROWDED_THRESH: 4         # Number of person that will be crowded
+
+DATA:
+  NUM_CLASSES: 1
+  CLASS_NAMES: ["head"]
