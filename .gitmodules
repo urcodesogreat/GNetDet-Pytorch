@@ -1,3 +1,6 @@
 [submodule "DSCollection"]
 	path = DSCollection
 	url = git@github.com:cvamateur/DSCollection.git
+[submodule "pyGNetDet"]
+	path = pyGNetDet
+	url = git@github.com:cvamateur/pyGNetDet.git
