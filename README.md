@@ -43,6 +43,11 @@ GNetDet is a simple one stage object detection network, like YOLO, with slightly
 
 To train GNetDet, one must strictly follow the following four steps training procedure before converting to a real chip model.
 
+> Note:
+>  One can use Tensorboard to supervise all steps of training for more in-depth information include `loss-epoch`, `mAP-epoch`, `lr-epoch`, or distribution of parameters, activations as well as gradient flow.
+>  `tensorboard --logdir log`
+
+
 
 
 **Step 1: Training a FP32 model**
@@ -129,7 +134,7 @@ Also, the performance degradation may not be too much, 1~10% degradation is alwa
 
 **Step 4: Quantize to Chip**
 
- The final training step is turn on quant-31, which is required by 5801 chip. 
+ The final training step is quant-31, which couples step2 and step3 training phase together with 5-bit quantization. All parameters and activations are all within [0, 31] range. 
 
 ```python
 python train-dist.py --step 4 [hyperparameters]
@@ -144,7 +149,7 @@ gamma 0.1 \
 warmup-epochs 100
 ```
 
-If the training successfull, you may quickly see the model perform as close as step 3. During this step, the evaluation may drastically drop down and quickly retrieve, this phenomenon can be clearly seen when you turn on Tensorboard during training, but don't worry about that, you can manually stop the training procedure as you want if you see the mAP is good enough.
+If the training succeed, you may quickly see the model performance is as closly as step 3. During this step, the mAP metric may drastically oscillating, this phenomenon can be clearly seen when you turn on Tensorboard during training, but don't worry about that, you can manually stop the training procedure as you want if you see the mAP is good enough.
 
 
 
